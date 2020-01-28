@@ -1,0 +1,1 @@
+C:\Users\willi\PycharmProjects\SentinelRPG\venv\Scripts\jupyter-notebook.exe --notebook-dir C:\Users\willi\PycharmProjects\SentinelRPG\
