@@ -1,0 +1,45 @@
+.objective-table {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+ th.objective-table {
+   border: 1px solid #ddd;
+   padding-left: 1em;
+   font-size: 150%;
+}
+
+td.objective-table {
+  border: 1px solid #ddd;
+  padding-left: 3em;
+}
+
+
+td.individual-objective-table {
+  padding-left: 1em;
+}
+
+tr.objective-table:nth-child(even){background-color: #f2f2f2;}
+
+tr.objective-table:hover {background-color: #ddd;}
+
+td.objective-table.desc-selected {background-color: #c5d4ed;}
+
+td.objective-table.desc-selected:hover {background-color: #B7C6DF;}
+
+
+
+div.objective-table-description {
+    padding-left: 3em;
+}
+
+div.hide-display {
+  display: none;
+}
+
+th.objective-table {
+  text-align: left;
+  background-color: SlateGrey;
+  color: white;
+}

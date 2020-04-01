@@ -2,13 +2,16 @@ import ipywidgets
 
 from Jupyter.Widgets.ImageWidgets import create_image_from_file, change_image_from_file
 
-from Sentinel.Core.world import SceneTracker
+from Sentinel.Core.world import World, SceneTracker
 
 
 class SceneTrackerDisplay(ipywidgets.VBox):
-    def __init__(self, scene_tracker, *args, **kwargs):
+    def __init__(self, target_world: World, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tray = SceneTrackerTray(scene_tracker)
+
+        self.tracker = target_world.get_scene_tracker()
+
+        self.tray = SceneTrackerTray(self.tracker)
         self.custom_css = ipywidgets.HTML(
             "<style>{0}</style>".format(open('Jupyter/UniversalDisplay/UniversalDisplay.css').read()))
 
@@ -73,7 +76,7 @@ class SceneTrackerTray(ipywidgets.HBox):
 
         self.children = children_to_add
 
-    def _observe_tracker(self):
+    def observe_tracker(self):
         tl = self.scene_tracker.get_tracker_list()
         if len(tl)-1 != len(self.tracker_list):
             self.set_tracker_list()

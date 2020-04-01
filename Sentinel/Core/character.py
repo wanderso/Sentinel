@@ -1,4 +1,4 @@
-from Core.dice import Dice
+from Sentinel.Core.dice import Dice
 
 
 class Character:
@@ -110,7 +110,6 @@ class Lieutenant(Character):
         print("Removing %s" % self.name)
         if self.world:
             self.world.remove_entity(self)
-
 
     def __str__(self):
         if self.current_die.get_die_size() == self.max_die.get_die_size():

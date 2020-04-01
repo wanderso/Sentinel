@@ -5,28 +5,3 @@ div.component-header {
   font-style: italic;
 }
 
-.environment-table {
-  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
- th.environment-table {
-   border: 1px solid #ddd;
-   padding-left: 1em;
-}
-
-td.environment-table {
-  border: 1px solid #ddd;
-  padding-left: 3em;
-}
-
-tr.environment-table:nth-child(even){background-color: #f2f2f2;}
-
-tr.environment-table:hover {background-color: #ddd;}
-
-th.environment-table {
-  text-align: left;
-  background-color: SlateGrey;
-  color: white;
-}

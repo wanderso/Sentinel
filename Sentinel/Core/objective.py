@@ -3,6 +3,10 @@ class Objective:
         self.description = obj_description
         self.main_objective = is_main
         self.challenge_list = chal_list
+        self._observers = set()
+        for entry in chal_list:
+            if isinstance(entry, Challenge):
+                entry.add_observer(self)
 
     def __bool__(self):
         for challenge in self.challenge_list:
@@ -10,11 +14,30 @@ class Objective:
                 return False
         return True
 
-    def __add__(self,other):
+    def __add__(self, other):
         if type(other) == int:
             for challenge in self.challenge_list:
                 if not challenge:
                     challenge += other
+
+    def add_observer(self, observ):
+        self._observers.add(observ)
+
+    def observe_challenge(self):
+        for observ in self._observers:
+            observ.observe_objective()
+
+    def get_description(self):
+        return self.description
+
+    def get_challenges(self):
+        list_ret = []
+        for entry in self.challenge_list:
+            list_ret.append(str(entry))
+        return list_ret
+
+    def is_main(self):
+        return self.main_objective
 
 
 class Challenge:
@@ -22,17 +45,24 @@ class Challenge:
         self.count = task_count
         self.complete = 0
         self.description = cha_description
+        self._observers = set()
 
     def __bool__(self):
         return self.count <= self.complete
 
     def __add__(self, other):
-        if type(other) == int:
+        if isinstance(other, int):
             self.complete += other
+            for observ in self._observers:
+                observ.observe_challenge()
         return self
 
     def __str__(self):
-        return ("[X]"*self.complete) + ("[ ]"*(self.count-self.complete)) + " " + self.description
+        return ("☑"*self.complete) + ("☐"*(self.count-self.complete)) + " " + self.description
+
+    def add_observer(self, observ):
+        self._observers.add(observ)
+
 
 if __name__ == "__main__":
     new_cha = Challenge(2, "Defuse the bombs!")
