@@ -1,8 +1,8 @@
-require.undef('sentinel_table');
+require.undef('sentinel_table_description_widget');
 
-define('sentinel_table', ["@jupyter-widgets/base"], function(widgets) {
+define('sentinel_table_description_widget', ["@jupyter-widgets/base"], function(widgets) {
 
-    var SentinelTable = widgets.DOMWidgetView.extend({
+    var SentinelTableDescriptionWidget = widgets.DOMWidgetView.extend({
 
         // Render the view.
         render: function()
@@ -184,6 +184,6 @@ define('sentinel_table', ["@jupyter-widgets/base"], function(widgets) {
     });
 
     return {
-        SentinelTable: SentinelTable
+        SentinelTableDescriptionWidget: SentinelTableDescriptionWidget
     };
 });

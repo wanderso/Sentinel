@@ -9,10 +9,9 @@ class World:
     def __init__(self):
         self.environment_list = []
         self.scene_tracker = None
-        self.entity_tracker = []
-        self.active_entity = None
         self.challenge_list = []
         self.character_tracker = CharacterTracker()
+        self.objective_tracker = ObjectiveTracker()
         self._observers = []
 
     def add_observer(self, observ):
@@ -23,17 +22,14 @@ class World:
             observ.observe_world()
 
     def add_entity(self, entity, ambush=False):
-        new_tracker = TrackEntity(entity, ambush=ambush)
-        self.entity_tracker.append(new_tracker)
-        self.update_observers()
+        self.character_tracker.add_entity(entity, ambush=ambush)
 
     def remove_entity(self, search_target):
-        to_remove = self.find_entity(search_target)
-        self.entity_tracker.remove(to_remove)
-        self.update_observers()
+        self.character_tracker.remove_entity(search_target)
 
     def add_objective(self, obj: Objective):
         self.challenge_list.append(obj)
+        self.objective_tracker.add_objective(obj)
 
     def get_objectives(self):
         primary_objectives = []
@@ -65,6 +61,9 @@ class World:
     def get_character_tracker(self):
         return self.character_tracker
 
+    def get_objective_tracker(self):
+        return self.objective_tracker
+
     def get_environment_list(self):
         return self.environment_list
 
@@ -75,12 +74,49 @@ class World:
         self.environment_list.append(env)
 
 
-class CharacterTracker:
+class ObjectiveTracker:
     def __init__(self):
-        self.environment_list = []
+
+        self.primary = ObjectiveTrackerCategory("Primary Objectives")
+        self.secondary = ObjectiveTrackerCategory("Secondary Objectives")
+        self.completed = ObjectiveTrackerCategory("Completed Objectives")
+
         self.entity_tracker = []
         self.active_entity = None
         self._observers = []
+
+    def add_objective(self, obj: Objective):
+        if obj:
+            self.completed.add_objective(obj)
+        elif obj.is_main():
+            self.primary.add_objective(obj)
+        else:
+            self.secondary.add_objective(obj)
+
+    def get_tracker_list(self):
+        return [self.primary, self.secondary, self.completed]
+
+    def add_observer(self, observ):
+        self._observers.append(observ)
+
+    def update_observers(self):
+        for observ in self._observers:
+            observ.observe_world()
+
+
+class CharacterTracker:
+    def __init__(self):
+
+        self.active_character = CharacterTrackerCategory("Active Character")
+        self.ready_characters = CharacterTrackerCategory("Ready Characters")
+        self.engaged_characters = CharacterTrackerCategory("Engaged Characters")
+
+        self.entity_tracker = []
+        self.active_entity = None
+        self._observers = []
+
+    def get_tracker_list(self):
+        return [self.ready_characters, self.active_character, self.engaged_characters]
 
     def add_observer(self, observ):
         self._observers.append(observ)
@@ -102,11 +138,22 @@ class CharacterTracker:
 
     def add_entity(self, entity, ambush=False):
         new_tracker = TrackEntity(entity, ambush=ambush)
+        if new_tracker.check_acted():
+            self.engaged_characters.add_character(new_tracker)
+        else:
+            self.ready_characters.add_character(new_tracker)
         self.entity_tracker.append(new_tracker)
         self.update_observers()
 
     def remove_entity(self, search_target):
         to_remove = self.find_entity(search_target)
+        if to_remove.check_acted():
+            self.engaged_characters.pop_character(to_remove)
+        elif to_remove is self.active_entity:
+            self.active_character.pop_character(to_remove)
+            self.active_entity = None
+        else:
+            self.ready_characters.pop_character(to_remove)
         self.entity_tracker.remove(to_remove)
         self.update_observers()
 
@@ -118,6 +165,7 @@ class CharacterTracker:
 
     def reset_turn(self):
         for entity in self.entity_tracker:
+            CharacterTrackerCategory.move_character(entity, self.engaged_characters, self.ready_characters)
             entity.set_acted(False)
 
     def hand_off(self, entity_hand):
@@ -127,19 +175,22 @@ class CharacterTracker:
             return -1
         if self.active_entity is not None:
             self.active_entity.set_acted(True)
+            CharacterTrackerCategory.move_character(self.active_entity, self.active_character, self.engaged_characters)
         if self.check_turn_over():
             self.reset_turn()
         elif entity_now.check_acted():
+            CharacterTrackerCategory.move_character(self.active_entity, self.engaged_characters, self.active_character)
             self.active_entity.set_acted(False)
             self.update_observers()
             return -2
         self.active_entity = entity_now
+        CharacterTrackerCategory.move_character(self.active_entity, self.ready_characters, self.active_character)
         self.update_observers()
         return 1
 
     def find_entity(self, search_target):
         for entry in self.entity_tracker:
-            if entry.get_entity() == search_target:
+            if entry.get_entity() == search_target or entry is search_target:
                 return entry
         return None
 
@@ -185,9 +236,67 @@ class CharacterTracker:
         return retstr
 
 
-class TrackEntity:
+class ObjectiveTrackerCategory(SentinelTableContainer):
+    def __init__(self, name):
+        self._observers = []
+        self.objectives = []
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    def get_traits(self):
+        return self.objectives
+
+    def add_observer(self, observ):
+        for entry in self.objectives:
+            entry.add_observer(observ)
+        self._observers.append(observ)
+
+    def add_objective(self, obj: Objective):
+        self.objectives.append(obj)
+
+
+class CharacterTrackerCategory(SentinelTableContainer):
+    def __init__(self, name):
+        self._observers = []
+        self.characters = []
+        self.name = name
+
+    def add_character(self, character):
+        self.characters.append(character)
+        self.observe_event()
+
+    @classmethod
+    def move_character(cls, character, old_tracker, new_tracker):
+        old_tracker.pop_character(character)
+        new_tracker.add_character(character)
+
+    def get_name(self):
+        return self.name
+
+    def get_traits(self):
+        return self.characters
+
+    def add_observer(self, observ):
+        for entry in self.characters:
+            entry.add_observer(observ)
+        self._observers.append(observ)
+
+    def pop_character(self, character):
+        self.characters.remove(character)
+        self.observe_event()
+
+    def observe_event(self):
+        for entry in self._observers:
+            entry.observe_event()
+
+
+class TrackEntity(SentinelTableEntry):
     def __init__(self, entity, ambush=False):
+        entity.add_observer(self)
         self.entity = entity
+        self._observers = []
         self.acted = not ambush
 
     def set_acted(self, acted):
@@ -198,6 +307,25 @@ class TrackEntity:
 
     def get_entity(self):
         return self.entity
+
+    def __str__(self):
+        return str(self.entity)
+
+    def get_name(self):
+        return str(self)
+
+    def get_description(self):
+        return repr(self.entity)
+
+    def add_observer(self, observ):
+        self._observers.append(observ)
+
+    def observe_event(self):
+        self.update_observers()
+
+    def update_observers(self):
+        for observ in self._observers:
+            observ.observe_event()
 
 
 class SceneTracker:
@@ -263,9 +391,10 @@ class Environment(SentinelTableContainer):
         self._observers = []
 
     def add_trait(self, trait_name, die_size=6, context={}):
-        self.trait_list.append(EnvironmentTrait(trait_name, die_size, context=context))
-        for entry in self._observers:
-            entry.observe_environment()
+        new_trait = EnvironmentTrait(trait_name, die_size, context=context)
+        self.trait_list.append(new_trait)
+        new_trait.add_observer(self)
+        self.observe_event()
 
     def get_name(self):
         return self.environment_name
@@ -275,6 +404,10 @@ class Environment(SentinelTableContainer):
 
     def add_observer(self, observ):
         self._observers.append(observ)
+
+    def observe_event(self):
+        for entry in self._observers:
+            entry.observe_event()
 
     def __str__(self):
         retstr = "Environment: " + self.environment_name + "\n"

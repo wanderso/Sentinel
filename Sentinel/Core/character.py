@@ -1,8 +1,10 @@
 from Sentinel.Core.dice import Dice
+from Jupyter.UniversalDisplay.ComprehensiveTools.SentinelMultiTable.SentinelTableInterface import SentinelTableEntry
 
 
-class Character:
+class Character(SentinelTableEntry):
     def __init__(self, name, context={}):
+        self._observers = []
         self.abilities = []
         self.timeline = None
         self.name = name
@@ -29,6 +31,15 @@ class Character:
     def remove(self):
         assert False
 
+    def add_observer(self, observ):
+        self._observers.append(observ)
+
+    def get_name(self):
+        return self.name
+
+    def get_description(self):
+        return ""
+
     def __str__(self):
         return str(self.name)
 
@@ -41,8 +52,20 @@ class Minion(Character):
         self.value = None
         self.current_die = Dice(self.max_die.get_die_size(), context=self.max_die.get_context())
 
+    def update_observers(self):
+        for observ in self._observers:
+            observ.observe_event()
+
     def get_current_die(self):
         return self.current_die
+
+    def increase_die(self):
+        self.current_die.increase_die_size()
+        self.update_observers()
+
+    def decrease_die(self):
+        self.current_die.decrease_die_size()
+        self.update_observers()
 
     def roll_die(self):
         self.value = self.current_die.roll()
@@ -52,19 +75,22 @@ class Minion(Character):
         self.roll_die()
         damage_save = self.value
         if damage_save >= damage and self.current_die.get_die_size() != Dice.Minimum_Size:
-            self.current_die.decrease_die_size()
+            self.decrease_die()
         else:
             self.remove()
 
     def heal_damage(self, heal_count):
         for _ in range (0, heal_count):
             if self.current_die.get_die_size() < self.max_die.get_die_size():
-                self.current_die.increase_die_size()
+                self.increase_die()
 
     def remove(self):
         print("Removing %s" % self.name)
         if self.world:
             self.world.remove_entity(self)
+
+    def get_description(self):
+        return repr(self)
 
     def __str__(self):
         return str(self.name)

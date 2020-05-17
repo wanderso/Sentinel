@@ -1,5 +1,8 @@
 import ipywidgets
+
 from Sentinel.Core.world import World
+
+from Jupyter.UniversalDisplay.ComprehensiveTools.SentinelMultiTable.SentinelMultiTable import SentinelMultiTable
 
 
 class ObjectiveDisplay(ipywidgets.VBox):
@@ -11,12 +14,23 @@ class ObjectiveDisplay(ipywidgets.VBox):
         self.header = ipywidgets.HTML("<div class='component-header'>Mission Focus and Targeting Computer - Objectives</div>")
 
         self.target_world = target_world
+        self.target_objectives = target_world.get_objective_tracker()
+
+        self.alt_display = SentinelMultiTable(self.target_objectives.get_tracker_list(), ['objective-table'], expandable=True)
+        extra_classes = ["primary", "secondary", "completed"]
+        self.alt_display.add_classes_list(extra_classes)
 
         self.primary_table = None
         self.secondary_table = None
         self.completed_table = None
 
         self.observe_objective()
+
+    def observe_world(self):
+        self.refresh_cld()
+
+    def refresh_cld(self):
+        self.children = (self.custom_css_1, self.custom_css_2, self.header, self.alt_display)
 
     def observe_objective(self):
         primary_table_text = "<table class='objective-table primary'>\n" \
@@ -84,4 +98,4 @@ class ObjectiveDisplay(ipywidgets.VBox):
         self.completed_table = ipywidgets.HTML(completed_table_text)
 
         self.children = (self.custom_css_1, self.custom_css_2, self.header,
-                         self.primary_table, self.secondary_table, self.completed_table)
+                         self.primary_table, self.secondary_table, self.completed_table, self.alt_display)

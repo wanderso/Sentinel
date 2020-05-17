@@ -2,9 +2,11 @@
   font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
   border-collapse: collapse;
   width: 100%;
+  font-size: var(--jp-widgets-font-size);
+  line-height: var(--jp-widgets-inline-height);
 }
 
- th.character-table {
+th.character-table {
    border: 1px solid #ddd;
    padding-left: 1em;
 }
@@ -18,11 +20,11 @@ tr.character-table:nth-child(even){background-color: #f2f2f2;}
 
 tr.character-table:hover {background-color: #ddd;}
 
-td.character-table.desc-selected {background-color: #c5d4ed;}
+tr.character-table.desc-selected {background-color: #c5d4ed;}
 
-td.character-table.desc-selected:hover {background-color: #B7C6DF;}
+tr.character-table.desc-selected:hover {background-color: #B7C6DF;}
 
-div.character-table-description {
+div.character-table.table-expanded-description {
     padding-left: 3em;
 }
 
@@ -36,7 +38,7 @@ th.character-table {
   color: white;
 }
 
-div.active-character-header {
+th.character-table.active {
   text-align: left;
   background-color: SlateGrey;
   color: white;
@@ -48,11 +50,20 @@ div.active-character-header {
   padding-bottom: 0.5em;
 }
 
-div.active-character-display {
+td.character-table.active {
   text-align: left;
   font-size: 125%;
   border: 1px solid #ddd;
   padding-left: 3em;
   padding-top: 0.25em;
   padding-bottom: 0.25em;
+}
+
+th.character-table.empty {
+  background-color: DarkGrey;
+  color: LightGrey;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
 }

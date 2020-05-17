@@ -4,9 +4,9 @@ from IPython.core.display import Javascript, display
 
 
 @register
-class SentinelTable(DOMWidget):
-    _view_name = Unicode('SentinelTable').tag(sync=True)
-    _view_module = Unicode('sentinel_table').tag(sync=True)
+class SentinelTableDescriptionWidget(DOMWidget):
+    _view_name = Unicode('SentinelTableDescriptionWidget').tag(sync=True)
+    _view_module = Unicode('sentinel_table_description_widget').tag(sync=True)
     _view_module_version = Unicode('0.1.0').tag(sync=True)
 
     # Attributes
@@ -28,7 +28,7 @@ class SentinelTable(DOMWidget):
         self.class_list = class_list
         self.table_header = table_header
         self.expandable = expandable
-        self.js_handler = TableJavascriptHandler()
+        self.js_handler = TableDescriptionWidgetJavascriptHandler()
         self.js_handler.activate_javascript()
 
     def add_observer(self, observ):
@@ -80,12 +80,12 @@ class SentinelTable(DOMWidget):
             self.append_class("empty")
 
 
-class TableJavascriptHandler(Output):
+class TableDescriptionWidgetJavascriptHandler(Output):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def activate_javascript(self):
         with self:
             carrie = Javascript(open("Jupyter\\UniversalDisplay\\CustomWidgets" +
-                                     "\\SentinelTable\\sentinel_table.js", 'r').read())
+                                     "\\SentinelTable\\sentinel_table_description_widget.js", 'r').read())
             display(carrie)

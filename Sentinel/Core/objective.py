@@ -1,9 +1,15 @@
-class Objective:
+from Jupyter.UniversalDisplay.ComprehensiveTools.SentinelMultiTable.\
+    SentinelTableInterface import SentinelTableEntry
+
+
+class Objective(SentinelTableEntry):
     def __init__(self, obj_description, chal_list, is_main=False):
-        self.description = obj_description
+        self.name = obj_description
         self.main_objective = is_main
         self.challenge_list = chal_list
+        self.expanded = False
         self._observers = set()
+
         for entry in chal_list:
             if isinstance(entry, Challenge):
                 entry.add_observer(self)
@@ -20,6 +26,9 @@ class Objective:
                 if not challenge:
                     challenge += other
 
+    def get_name(self):
+        return self.name
+
     def add_observer(self, observ):
         self._observers.add(observ)
 
@@ -28,7 +37,11 @@ class Objective:
             observ.observe_objective()
 
     def get_description(self):
-        return self.description
+        chal_list = self.get_challenges()
+        ret_str = ""
+        for entry in chal_list:
+            ret_str += str(entry) + "\n"
+        return ret_str
 
     def get_challenges(self):
         list_ret = []

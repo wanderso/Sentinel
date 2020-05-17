@@ -12,24 +12,32 @@ class SentinelMultiTable(ipywidgets.VBox):
         self.selected_table = None
 
         self.single_displays = []
-
         self.table_list = contain_list
 
         for value in self.table_list:
-            a1 = SingleSentinelDisplay(value, table_classes)
+            a1 = SingleSentinelDisplay(value, table_classes, *args, **kwargs)
             self.single_displays.append(a1)
             a1.add_observer(self)
 
         self.children = tuple(self.single_displays)
 
-    def receive_message(self, message_list):
-        for entry in self.environment_list:
-            entry.receive_message(message_list)
-
     def observe_display(self, single_display):
         if self.selected_table is not None and self.selected_table is not single_display:
             self.selected_table.clear_selected_trait()
         self.selected_table = single_display
+
+    def get_selected_entry(self):
+        if self.selected_table is None:
+            return None
+        return self.selected_table.get_selected_entry()
+
+    def add_classes_list(self, list_of_classes):
+        for i in range(len(list_of_classes)):
+            self.single_displays[i].append_class(list_of_classes[i])
+
+    def remove_classes_list(self, list_of_classes):
+        for i in range(len(list_of_classes)):
+            self.single_displays[i].remove_class(list_of_classes[i])
 
 
 class SingleSentinelDisplay(ipywidgets.VBox):
@@ -38,17 +46,20 @@ class SingleSentinelDisplay(ipywidgets.VBox):
 
         self._observers = []
 
-        self.linked_objects: List[SentinelTableEntry] = list(object_container.get_traits())
+        self.linked_objects: List[SentinelTableEntry] = object_container.get_traits()
         self.table_header = object_container.get_name()
 
-        self.display_table = SentinelTable([], table_classes, self.table_header)
+        self.table_classes = list(table_classes)
 
+        self.display_table = SentinelTable([], self.table_classes, self.table_header, *args, **kwargs)
+
+        object_container.add_observer(self)
         self.display_table.add_observer(self)
 
         self.selected_trait = -1
         self.selected_table = False
 
-        self.observe_environment()
+        self.observe_event()
 
         self.children = (self.display_table,)
 
@@ -64,6 +75,10 @@ class SingleSentinelDisplay(ipywidgets.VBox):
     def update_table(self):
         name_list = []
         description_list = []
+        if len(self.linked_objects) == 0:
+            self.display_table.is_empty()
+        else:
+            self.display_table.is_full()
         for value in self.linked_objects:
             name_list.append(value.get_name())
             desc_value = value.get_description()
@@ -79,4 +94,15 @@ class SingleSentinelDisplay(ipywidgets.VBox):
 
     def clear_selected_trait(self):
         if self.selected_trait is not None and self.selected_trait != -1:
-            self.environment_table.clear_selected()
+            self.display_table.clear_selected()
+
+    def get_selected_entry(self):
+        if self.selected_trait == -1:
+            return None
+        return self.linked_objects[self.selected_trait]
+
+    def append_class(self, class_name):
+        self.display_table.append_class(class_name)
+
+    def remove_class(self, class_name):
+        self.display_table.remove_class(class_name)
